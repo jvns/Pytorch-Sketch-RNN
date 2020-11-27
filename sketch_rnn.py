@@ -218,10 +218,10 @@ class Model():
             mask = mask.cuda()
         dx = torch.stack([batch.data[:,:,0]]*hp.M,2)
         dy = torch.stack([batch.data[d:,:,1]]*hp.M,2)
-        p1 = batch.data[:,:,2]       d
-        p2 = batch.data[:,:,3]       d
-        p3 = batch.data[:,:,4]       d
-        p = torch.stack([p1,p2,p3],2)N
+        p1 = batch.data[:,:,2]
+        p2 = batch.data[:,:,3]
+        p3 = batch.data[:,:,4]
+        p = torch.stack([p1,p2,p3],2)
         return mask,dx,dy,p
 
     def train(self, data, epoch):
