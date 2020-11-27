@@ -75,7 +75,7 @@ def normalize(strokes):
 #Nmax = max_size(data)
 
 ############################## function to generate a batch:
-def make_batch(batch_size):
+def make_batch(data, batch_size):
     batch_idx = np.random.choice(len(data),batch_size)
     batch_sequences = [data[idx] for idx in batch_idx]
     strokes = []
@@ -223,10 +223,10 @@ class Model():
         p = torch.stack([p1,p2,p3],2)
         return mask,dx,dy,p
 
-    def train(self, epoch):
+    def train(self, data, epoch):
         self.encoder.train()
         self.decoder.train()
-        batch, lengths = make_batch(hp.batch_size)
+        batch, lengths = make_batch(data, hp.batch_size)
         # encode:
         z, self.mu, self.sigma = self.encoder(batch, hp.batch_size)
         # create start of sequence:
@@ -407,11 +407,12 @@ def make_image(sequence, epoch, name='_output_'):
     name = str(epoch)+name+'.jpg'
     pil_image.save(name,"JPEG")
     plt.close("all")
+    return pil_image
 
 if __name__=="__main__":
     model = Model()
     for epoch in range(50001):
-        model.train(epoch)
+        model.train(data, epoch)
 
     '''
     model.load('encoder.pth','decoder.pth')
