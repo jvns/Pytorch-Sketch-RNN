@@ -211,7 +211,7 @@ class Model():
         else:
             eos = torch.stack([torch.Tensor([0,0,0,0,1])]*batch.size()[1]).unsqueeze(0)
         batch = torch.cat([batch, eos], 0)
-        mask = torch.zeros(self.Nmax+1, batch.size()[1])
+        mask = torch.zeros(self.NMax+1, batch.size()[1])
         for indice,length in enumerate(lengths):
             mask[:length,indice] = 1
         if use_cuda:
@@ -238,7 +238,7 @@ class Model():
         # had sos at the begining of the batch:
         batch_init = torch.cat([sos, batch],0)
         # expend z to be ready to concatenate with inputs:
-        z_stack = torch.stack([z]*(self.Nmax+1))
+        z_stack = torch.stack([z]*(self.NMax+1))
         # inputs is concatenation of z and batch_inputs
         inputs = torch.cat([batch_init, z_stack],2)
         # decode:
@@ -284,8 +284,8 @@ class Model():
     def reconstruction_loss(self, mask, dx, dy, p, epoch):
         pdf = self.bivariate_normal_pdf(dx, dy)
         LS = -torch.sum(mask*torch.log(1e-5+torch.sum(self.pi * pdf, 2)))\
-            /float(self.Nmax*hp.batch_size)
-        LP = -torch.sum(p*torch.log(self.q))/float(self.Nmax*hp.batch_size)
+            /float(self.NMax*hp.batch_size)
+        LP = -torch.sum(p*torch.log(self.q))/float(self.NMax*hp.batch_size)
         return LS+LP
 
     def kullback_leibler_loss(self):
@@ -326,7 +326,7 @@ class Model():
         seq_y = []
         seq_z = []
         hidden_cell = None
-        for i in range(self.Nmax):
+        for i in range(self.NMax):
             input = torch.cat([s,z.unsqueeze(0)],2)
             # decode:
             self.pi, self.mu_x, self.mu_y, self.sigma_x, self.sigma_y, \
