@@ -94,9 +94,9 @@ def make_batch(data, batch_size, Nmax):
         indice += 1
 
     if use_cuda:
-        batch = Variable(torch.from_numpy(np.stack(strokes,1)).cuda().float())
+        batch = nn.Variable(torch.from_numpy(np.stack(strokes,1)).cuda().float())
     else:
-        batch = Variable(torch.from_numpy(np.stack(strokes,1)).float())
+        batch = nn.Variable(torch.from_numpy(np.stack(strokes,1)).float())
     return batch, lengths
 
 ################################ adaptive lr
@@ -292,9 +292,9 @@ class Model():
         LKL = -0.5*torch.sum(1+self.sigma-self.mu**2-torch.exp(self.sigma))\
             /float(hp.Nz*hp.batch_size)
         if use_cuda:
-            KL_min = Variable(torch.Tensor([hp.KL_min]).cuda()).detach()
+            KL_min = nn.Variable(torch.Tensor([hp.KL_min]).cuda()).detach()
         else:
-            KL_min = Variable(torch.Tensor([hp.KL_min])).detach()
+            KL_min = nn.Variable(torch.Tensor([hp.KL_min])).detach()
         return hp.wKL*self.eta_step * torch.max(LKL,KL_min)
 
     def save(self, epoch):
@@ -318,9 +318,9 @@ class Model():
         # encode:
         z, _, _ = self.encoder(batch, 1)
         if use_cuda:
-            sos = Variable(torch.Tensor([0,0,1,0,0]).view(1,1,-1).cuda())
+            sos = nn.Variable(torch.Tensor([0,0,1,0,0]).view(1,1,-1).cuda())
         else:
-            sos = Variable(torch.Tensor([0,0,1,0,0]).view(1,1,-1))
+            sos = nn.Variable(torch.Tensor([0,0,1,0,0]).view(1,1,-1))
         s = sos
         seq_x = []
         seq_y = []
@@ -378,9 +378,9 @@ class Model():
         next_state[1] = y
         next_state[q_idx+2] = 1
         if use_cuda:
-            return Variable(next_state.cuda()).view(1,1,-1),x,y,q_idx==1,q_idx==2
+            return nn.Variable(next_state.cuda()).view(1,1,-1),x,y,q_idx==1,q_idx==2
         else:
-            return Variable(next_state).view(1,1,-1),x,y,q_idx==1,q_idx==2
+            return nn.Variable(next_state).view(1,1,-1),x,y,q_idx==1,q_idx==2
 
 def sample_bivariate_normal(mu_x,mu_y,sigma_x,sigma_y,rho_xy, greedy=False):
     # inputs must be floats
