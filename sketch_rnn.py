@@ -125,7 +125,7 @@ class EncoderRNN(nn.Module):
             # then must init with zeros
             if use_cuda:
                 hidden = torch.zeros(2, batch_size, hp.enc_hidden_size).cuda()
-                cell = torch.zeros(2, batch_size, hp.enc_hidden_size.cuda()
+                cell = torch.zeros(2, batch_size, hp.enc_hidden_size).cuda()
             else:
                 hidden = torch.zeros(2, batch_size, hp.enc_hidden_size)
                 cell = torch.zeros(2, batch_size, hp.enc_hidden_size)
@@ -182,7 +182,7 @@ class DecoderRNN(nn.Module):
             len_out = Nmax+1
         else:
             len_out = 1
-                                   
+
         pi = F.softmax(pi.transpose(0,1).squeeze()).view(len_out,-1,hp.M)
         sigma_x = torch.exp(sigma_x.transpose(0,1).squeeze()).view(len_out,-1,hp.M)
         sigma_y = torch.exp(sigma_y.transpose(0,1).squeeze()).view(len_out,-1,hp.M)
