@@ -194,8 +194,9 @@ class DecoderRNN(nn.Module):
         return pi,mu_x,mu_y,sigma_x,sigma_y,rho_xy,q,hidden,cell
 
 class Model():
-    def __init__(self, NMax):
+    def __init__(self, data, NMax):
         self.NMax = NMax
+        self.data = data
         if use_cuda:
             self.encoder = EncoderRNN().cuda()
             self.decoder = DecoderRNN(Nmax).cuda()
@@ -312,7 +313,7 @@ class Model():
         self.decoder.load_state_dict(saved_decoder)
 
     def conditional_generation(self, epoch):
-        batch,lengths = make_batch(1)
+        batch,lengths = make_batch(self.data, 1, self.NMax)
         # should remove dropouts:
         self.encoder.train(False)
         self.decoder.train(False)
