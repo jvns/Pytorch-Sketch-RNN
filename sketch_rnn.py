@@ -75,7 +75,7 @@ def normalize(strokes):
 #Nmax = max_size(data)
 
 ############################## function to generate a batch:
-def make_batch(data, batch_size):
+def make_batch(data, batch_size, Nmax):
     batch_idx = np.random.choice(len(data),batch_size)
     batch_sequences = [data[idx] for idx in batch_idx]
     strokes = []
@@ -193,7 +193,8 @@ class DecoderRNN(nn.Module):
         return pi,mu_x,mu_y,sigma_x,sigma_y,rho_xy,q,hidden,cell
 
 class Model():
-    def __init__(self):
+    def __init__(self, NMax):
+        self.NMax = NMax
         if use_cuda:
             self.encoder = EncoderRNN().cuda()
             self.decoder = DecoderRNN().cuda()
@@ -210,23 +211,23 @@ class Model():
         else:
             eos = torch.stack([torch.Tensor([0,0,0,0,1])]*batch.size()[1]).unsqueeze(0)
         batch = torch.cat([batch, eos], 0)
-        mask = torch.zeros(Nmax+1, batch.size()[1])
+        mask = torch.zeros(self.Nmax+1, batch.size()[1])
         for indice,length in enumerate(lengths):
             mask[:length,indice] = 1
         if use_cuda:
             mask = mask.cuda()
         dx = torch.stack([batch.data[:,:,0]]*hp.M,2)
-        dy = torch.stack([batch.data[:,:,1]]*hp.M,2)
-        p1 = batch.data[:,:,2]
-        p2 = batch.data[:,:,3]
-        p3 = batch.data[:,:,4]
-        p = torch.stack([p1,p2,p3],2)
+        dy = torch.stack([batch.data[d:,:,1]]*hp.M,2)
+        p1 = batch.data[:,:,2]       d
+        p2 = batch.data[:,:,3]       d
+        p3 = batch.data[:,:,4]       d
+        p = torch.stack([p1,p2,p3],2)N
         return mask,dx,dy,p
 
     def train(self, data, epoch):
         self.encoder.train()
         self.decoder.train()
-        batch, lengths = make_batch(data, hp.batch_size)
+        batch, lengths = make_batch(data, hp.batch_size, self.NMax)
         # encode:
         z, self.mu, self.sigma = self.encoder(batch, hp.batch_size)
         # create start of sequence:
@@ -237,7 +238,7 @@ class Model():
         # had sos at the begining of the batch:
         batch_init = torch.cat([sos, batch],0)
         # expend z to be ready to concatenate with inputs:
-        z_stack = torch.stack([z]*(Nmax+1))
+        z_stack = torch.stack([z]*(self.Nmax+1))
         # inputs is concatenation of z and batch_inputs
         inputs = torch.cat([batch_init, z_stack],2)
         # decode:
@@ -283,8 +284,8 @@ class Model():
     def reconstruction_loss(self, mask, dx, dy, p, epoch):
         pdf = self.bivariate_normal_pdf(dx, dy)
         LS = -torch.sum(mask*torch.log(1e-5+torch.sum(self.pi * pdf, 2)))\
-            /float(Nmax*hp.batch_size)
-        LP = -torch.sum(p*torch.log(self.q))/float(Nmax*hp.batch_size)
+            /float(self.Nmax*hp.batch_size)
+        LP = -torch.sum(p*torch.log(self.q))/float(self.Nmax*hp.batch_size)
         return LS+LP
 
     def kullback_leibler_loss(self):
@@ -325,7 +326,7 @@ class Model():
         seq_y = []
         seq_z = []
         hidden_cell = None
-        for i in range(Nmax):
+        for i in range(self.Nmax):
             input = torch.cat([s,z.unsqueeze(0)],2)
             # decode:
             self.pi, self.mu_x, self.mu_y, self.sigma_x, self.sigma_y, \
