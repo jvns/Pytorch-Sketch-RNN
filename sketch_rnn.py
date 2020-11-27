@@ -218,7 +218,7 @@ class Model():
         if use_cuda:
             mask = mask.cuda()
         dx = torch.stack([batch.data[:,:,0]]*hp.M,2)
-        dy = torch.stack([batch.data[d:,:,1]]*hp.M,2)
+        dy = torch.stack([batch.data[:,:,1]]*hp.M,2)
         p1 = batch.data[:,:,2]
         p2 = batch.data[:,:,3]
         p3 = batch.data[:,:,4]
