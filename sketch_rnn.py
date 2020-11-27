@@ -266,7 +266,7 @@ class Model():
         self.decoder_optimizer.step()
         # some print and save:
         if epoch%1==0:
-            print('epoch',epoch,'loss',loss.data[0],'LR',LR.data[0],'LKL',LKL.data[0])
+            print('epoch',epoch,'loss',loss.item(),'LR',LR.item(),'LKL',LKL.item())
             self.encoder_optimizer = lr_decay(self.encoder_optimizer)
             self.decoder_optimizer = lr_decay(self.decoder_optimizer)
         if epoch%100==0:
