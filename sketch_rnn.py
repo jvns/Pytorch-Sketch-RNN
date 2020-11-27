@@ -197,6 +197,7 @@ class Model():
     def __init__(self, data, NMax):
         self.NMax = NMax
         self.data = data
+        self.losses = []
         if use_cuda:
             self.encoder = EncoderRNN().cuda()
             self.decoder = DecoderRNN(Nmax).cuda()
@@ -268,6 +269,7 @@ class Model():
         # some print and save:
         if epoch%1==0:
             print('epoch',epoch,'loss',loss.item(),'LR',LR.item(),'LKL',LKL.item())
+            self.losses.append(loss.item())
             self.encoder_optimizer = lr_decay(self.encoder_optimizer)
             self.decoder_optimizer = lr_decay(self.decoder_optimizer)
         if epoch%100==0:
