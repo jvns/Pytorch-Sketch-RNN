@@ -162,7 +162,7 @@ class DecoderRNN(nn.Module):
     def forward(self, inputs, z, hidden_cell=None):
         if hidden_cell is None:
             # then we must init from z
-            hidden,cell = torch.split(F.tanh(self.fc_hc(z)),hp.dec_hidden_size,1)
+            hidden,cell = torch.split(torch.tanh(self.fc_hc(z)),hp.dec_hidden_size,1)
             hidden_cell = (hidden.unsqueeze(0).contiguous(), cell.unsqueeze(0).contiguous())
         outputs,(hidden,cell) = self.lstm(inputs, hidden_cell)
         # in training we feed the lstm with the whole input in one shot
