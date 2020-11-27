@@ -68,11 +68,11 @@ def normalize(strokes):
         data.append(seq)
     return data
 
-dataset = np.load(hp.data_location, encoding='latin1')
-data = dataset['train']
-data = purify(data)
-data = normalize(data)
-Nmax = max_size(data)
+#dataset = np.load(hp.data_location, encoding='latin1')
+#data = dataset['train']
+#data = purify(data)
+#data = normalize(data)
+#Nmax = max_size(data)
 
 ############################## function to generate a batch:
 def make_batch(batch_size):
