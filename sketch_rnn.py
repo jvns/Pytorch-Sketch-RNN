@@ -149,8 +149,9 @@ class EncoderRNN(nn.Module):
         return z, mu, sigma_hat
 
 class DecoderRNN(nn.Module):
-    def __init__(self):
+    def __init__(self, nmax):
         super(DecoderRNN, self).__init__()
+        self.NMax = nmax
         # to init hidden and cell from z:
         self.fc_hc = nn.Linear(hp.Nz, 2*hp.dec_hidden_size)
         # unidirectional lstm:
@@ -197,10 +198,10 @@ class Model():
         self.NMax = NMax
         if use_cuda:
             self.encoder = EncoderRNN().cuda()
-            self.decoder = DecoderRNN().cuda()
+            self.decoder = DecoderRNN(Nmax).cuda()
         else:
             self.encoder = EncoderRNN()
-            self.decoder = DecoderRNN()
+            self.decoder = DecoderRNN(NMax)
         self.encoder_optimizer = optim.Adam(self.encoder.parameters(), hp.lr)
         self.decoder_optimizer = optim.Adam(self.decoder.parameters(), hp.lr)
         self.eta_step = hp.eta_min
