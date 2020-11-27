@@ -179,7 +179,7 @@ class DecoderRNN(nn.Module):
         pi,mu_x,mu_y,sigma_x,sigma_y,rho_xy = torch.split(params_mixture,1,2)
         # preprocess params::
         if self.training:
-            len_out = Nmax+1
+            len_out = self.NMax+1
         else:
             len_out = 1
 
