@@ -12,6 +12,9 @@ import torch.nn.functional as F
 import numpy as np
 import sketch_rnn
 
+SOS = torch.Tensor([0,0,0,1,0])
+EOS = torch.Tensor([0,0,0,0,1])
+
 def load(filename):
     dataset = np.load(filename, encoding='latin1', allow_pickle=True)
     data = dataset['train']
@@ -27,11 +30,10 @@ class EncoderRNN(nn.Module):
         self.gru = nn.GRU(input_size, hidden_size, batch_first=True)
 
     def forward(self, input, hidden):
-        print(input.shape)
         if hidden is None:
             hidden = self.initHidden()
-        output, hidden = self.gru(input, hidden)
-        return output, hidden
+        _output, hidden = self.gru(input, hidden)
+        return hidden
 
     def initHidden(self):
         return torch.zeros(1, 1, self.hidden_size)
@@ -39,30 +41,44 @@ class EncoderRNN(nn.Module):
 class DecoderRNN(nn.Module):
     def __init__(self, hidden_size, output_size):
         super(DecoderRNN, self).__init__()
-        self.hidden_size = hidden_size
 
-        self.embedding = nn.Embedding(output_size, hidden_size)
-        self.gru = nn.GRU(hidden_size, hidden_size)
+        self.gru = nn.GRU(output_size, hidden_size)
         self.out = nn.Linear(hidden_size, output_size)
-        self.softmax = nn.LogSoftmax(dim=1)
 
-    def forward(self, input, hidden):
-        output = self.embedding(input).view(1, 1, -1)
-        output = F.relu(output)
-        output, hidden = self.gru(output, hidden)
-        output = self.softmax(self.out(output[0]))
-        return output, hidden
+    def forward(self, input, hidden=None):
+        #output = F.relu(output) # Everyone loves the relu! why???
+        output, hidden = self.gru(input, hidden)
+        return self.out(output), hidden
 
     def initHidden(self):
         return torch.zeros(1, 1, self.hidden_size, device=device)
 
+class AutoEncoder(nn.Module):
+    def __init__(self, input_size, hidden_size):
+        super(AutoEncoder, self).__init__()
+        self.encoder = EncoderRNN(input_size, hidden_size)
+        self.decoder = DecoderRNN(hidden_size, input_size)
+
+    def forward(self, input):
+        hidden = self.encoder(input, None)
+        num_lines = input.shape[1]
+        input = SOS.unsqueeze(0).unsqueeze(0)
+        outputs = []
+        for _ in range(num_lines):
+            output, hidden = self.decoder(input, hidden)
+            outputs.append(output)
+            input = output
+        return torch.cat(outputs).transpose(0,1)
+
+
+        # question: how do we calculate the loss from the decoder, do we compare the whole sequence, and if so, how?
+        # yeah we just add them all together
+
 def prepare_input(inp):
     inp = inp.unsqueeze(0)
     inp = F.pad(inp, (0,2))
-    sos = torch.Tensor([0,0,0,1,0])
-    eos = torch.Tensor([0,0,0,0,1])
-    inp = torch.cat((sos.unsqueeze(0).unsqueeze(0), inp), dim=1)
-    inp = torch.cat((inp, eos.unsqueeze(0).unsqueeze(0)), dim=1)
+    inp = torch.cat((SOS.unsqueeze(0).unsqueeze(0), inp), dim=1)
+    inp = torch.cat((inp, EOS.unsqueeze(0).unsqueeze(0)), dim=1)
     return inp
 
 class Trainer():
@@ -139,3 +155,13 @@ class Trainer():
         return loss.item() / target_length
 
 
+"""
+questions:
+
+in this code:
+    def forward(self, input, length):
+        input = self.encoder(input)
+        decoded_output = self.decoder(input) #Softmax doesnt change a thing here, same problem
+        return decoded_output
+what are the dimensions of input / decoded_output? is decoded_output the same dimension?
+"""
