@@ -41,7 +41,7 @@ def draw_strokes(data, factor=0.045, svg_filename = '/tmp/sketch_rnn/svg/sample.
   dwg = svgwrite.Drawing(svg_filename, size=dims)
   dwg.add(dwg.rect(insert=(0, 0), size=dims,fill='white'))
   lift_pen = 1
-  abs_x = 25 - min_x 
+  abs_x = 25 - min_x
   abs_y = 25 - min_y
   p = "M%s,%s " % (abs_x, abs_y)
   command = "m"
@@ -61,6 +61,36 @@ def draw_strokes(data, factor=0.045, svg_filename = '/tmp/sketch_rnn/svg/sample.
   dwg.add(dwg.path(p).stroke(the_color,stroke_width).fill("none"))
   dwg.save()
   display(SVG(dwg.tostring()))
+
+def draw_strokes2(data, factor=0.045, svg_filename = '/tmp/sketch_rnn/svg/sample.svg'):
+  if not os.path.exists(os.path.dirname(svg_filename)):
+    os.makedirs(os.path.dirname(svg_filename))
+  min_x, max_x, min_y, max_y = get_bounds(data, factor)
+  dims = (50 + max_x - min_x, 50 + max_y - min_y)
+  dwg = svgwrite.Drawing(svg_filename, size=dims)
+  dwg.add(dwg.rect(insert=(0, 0), size=dims,fill='white'))
+  lift_pen = 1
+  abs_x = 25 - min_x
+  abs_y = 25 - min_y
+  p = "M%s,%s " % (abs_x, abs_y)
+  command = "m"
+  for i in range(len(data)):
+    if (lift_pen == 1):
+      command = "m"
+    elif (command != "l"):
+      command = "l"
+    else:
+      command = ""
+    x = float(data[i,0])/factor
+    y = float(data[i,1])/factor
+    lift_pen = data[i, 2]
+    p += command+str(x)+","+str(y)+" "
+  the_color = "black"
+  stroke_width = 1
+  dwg.add(dwg.path(p).stroke(the_color,stroke_width).fill("none"))
+  dwg.save()
+  return dwg.tostring()
+
 
 
 def show_image(img):
@@ -278,7 +308,7 @@ def get_line(x1, y1, x2, y2):
   # Reverse the list if the coordinates were reversed
   if rev:
     points.reverse()
-  return points   
+  return points
 
 @jit
 def stroke_to_quickdraw(orig_data, max_dim_size=5.0):
@@ -298,7 +328,7 @@ def stroke_to_quickdraw(orig_data, max_dim_size=5.0):
     abs_x = np.maximum(abs_x, 0)
     abs_x = np.minimum(abs_x, 255)
     abs_y = np.maximum(abs_y, 0)
-    abs_y = np.minimum(abs_y, 255)  
+    abs_y = np.minimum(abs_y, 255)
     lift_pen = data[i, 2]
     line.append([abs_x, abs_y])
     if (lift_pen == 1):
@@ -311,7 +341,7 @@ def create_image(stroke3, max_dim_size=5.0):
   image_dim = IMAGE_SIZE
   factor = 256/image_dim
   pixels = np.zeros((image_dim, image_dim))
-  
+
   sketch = stroke_to_quickdraw(stroke3, max_dim_size=max_dim_size)
 
   x = -1
@@ -319,7 +349,7 @@ def create_image(stroke3, max_dim_size=5.0):
 
   for stroke in sketch:
     for i in arange(len(stroke)):
-      if x != -1: 
+      if x != -1:
         for point in get_line(stroke[i][0], stroke[i][1], x, y):
           pixels[int(point[0]/factor),int(point[1]/factor)] = 1
       pixels[int(stroke[i][0]/factor),int(stroke[i][1]/factor)] = 1
